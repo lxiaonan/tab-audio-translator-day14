@@ -20,6 +20,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
+  if (message.type === "audio:chunk") {
+    uploadChunkFromWorker(message.tabId, message.chunk)
+      .then(() => sendResponse({ ok: true }))
+      .catch(error => sendResponse({ ok: false, error: friendlyError(error.message) }));
+    return true;
+  }
+
   if (message.type === "capture:error") {
     publishCaption(message.tabId, {
       at: new Date().toLocaleTimeString(),
@@ -76,6 +83,46 @@ async function probeBridge(bridgeUrl) {
   if (!response.ok) {
     throw new Error(`Bridge health check failed: ${response.status}`);
   }
+}
+
+async function uploadChunkFromWorker(tabId, chunk) {
+  const form = new FormData();
+  const blob = new Blob([new Uint8Array(chunk.bytes)], { type: chunk.mimeType || "audio/webm" });
+  form.append("audio", blob, `chunk-${String(chunk.index).padStart(4, "0")}.webm`);
+  form.append("source_lang", chunk.sourceLang);
+  form.append("target_lang", chunk.targetLang);
+  form.append("chunk_index", String(chunk.index));
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  let response;
+  try {
+    response = await fetch(`${chunk.bridgeUrl}/translate-chunk`, {
+      method: "POST",
+      body: form,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    throw new Error(
+      error.name === "AbortError"
+        ? "Local bridge timeout. Try a shorter chunk size or smaller Whisper model."
+        : `Cannot reach local bridge at ${chunk.bridgeUrl}. Keep start-local-translator.bat running.`
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`Bridge returned HTTP ${response.status}. ${detail}`.trim());
+  }
+  const payload = await response.json();
+  await publishCaption(tabId, {
+    at: new Date().toLocaleTimeString(),
+    source: payload.source_text || payload.source || "",
+    target: payload.translated_text || payload.target || "",
+    confidence: payload.confidence ?? null,
+    status: payload.status || "ok",
+  });
 }
 
 async function publishCaption(tabId, caption) {
