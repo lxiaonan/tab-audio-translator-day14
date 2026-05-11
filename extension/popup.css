@@ -176,6 +176,10 @@ select {
   gap: 10px;
 }
 
+.button-row {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
 .caption-card {
   min-height: 116px;
   padding: 14px;
@@ -190,4 +194,10 @@ select {
 
 #latest-target {
   color: var(--blue);
+}
+
+.version {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
 }

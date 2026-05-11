@@ -59,7 +59,7 @@ async function startCapture(tabId, config) {
 
 function friendlyError(error) {
   if (String(error).includes("Failed to fetch")) {
-    return "Cannot reach local bridge. Keep start-local-translator.bat running, then stop and start the extension again.";
+    return "Cannot reach local bridge. Reload the extension in chrome://extensions, keep start-local-translator.bat running, then start again.";
   }
   return error;
 }

@@ -8,6 +8,7 @@ const i18n = {
     sourceLang: "源语言",
     targetLang: "目标语言",
     chunkSeconds: "切片秒数",
+    testBridge: "测试连接",
     start: "开始翻译",
     stop: "停止",
     latestCaption: "最新字幕",
@@ -27,6 +28,7 @@ const i18n = {
     sourceLang: "Source language",
     targetLang: "Target language",
     chunkSeconds: "Chunk seconds",
+    testBridge: "Test bridge",
     start: "Start translation",
     stop: "Stop",
     latestCaption: "Latest caption",
@@ -46,6 +48,7 @@ const state = {
   session: null,
   latest: null,
   log: [],
+  settings: defaultSettings(),
 };
 
 const refs = {
@@ -54,6 +57,7 @@ const refs = {
   sourceLang: document.querySelector("#source-lang"),
   targetLang: document.querySelector("#target-lang"),
   chunkSeconds: document.querySelector("#chunk-seconds"),
+  testBridge: document.querySelector("#test-bridge"),
   start: document.querySelector("#start"),
   stop: document.querySelector("#stop"),
   copyLog: document.querySelector("#copy-log"),
@@ -68,7 +72,7 @@ init();
 
 async function init() {
   const saved = await chrome.storage.local.get(["settings", "latest", "log", "session"]);
-  Object.assign(settings(), saved.settings || {});
+  state.settings = { ...defaultSettings(), ...(saved.settings || {}) };
   state.latest = saved.latest || null;
   state.log = saved.log || [];
   state.session = saved.session || null;
@@ -84,6 +88,7 @@ function bind() {
     render();
   });
   refs.start.addEventListener("click", start);
+  refs.testBridge.addEventListener("click", testBridge);
   refs.stop.addEventListener("click", stop);
   refs.copyLog.addEventListener("click", copyLog);
   chrome.runtime.onMessage.addListener(message => {
@@ -97,6 +102,18 @@ function bind() {
       render();
     }
   });
+}
+
+async function testBridge() {
+  const config = readSettings();
+  const health = await checkBridge(config.bridgeUrl);
+  if (!health.ok) {
+    refs.statusTitle.textContent = t("bridgeFail");
+    refs.statusText.textContent = health.error;
+    return;
+  }
+  refs.statusTitle.textContent = "Bridge OK";
+  refs.statusText.textContent = "Local service is reachable. v1.0.2";
 }
 
 async function start() {
@@ -156,7 +173,7 @@ function t(key) {
   return i18n[state.lang][key] || key;
 }
 
-function settings() {
+function defaultSettings() {
   return {
     bridgeUrl: "http://127.0.0.1:8787",
     sourceLang: "auto",
@@ -166,7 +183,7 @@ function settings() {
 }
 
 function fillSettings() {
-  const config = settings();
+  const config = state.settings;
   refs.bridgeUrl.value = config.bridgeUrl;
   refs.sourceLang.value = config.sourceLang;
   refs.targetLang.value = config.targetLang;
@@ -174,17 +191,18 @@ function fillSettings() {
 }
 
 function readSettings() {
-  return {
+  state.settings = {
     bridgeUrl: refs.bridgeUrl.value.replace(/\/$/, ""),
     sourceLang: refs.sourceLang.value,
     targetLang: refs.targetLang.value,
     chunkSeconds: Math.max(2, Math.min(15, Number(refs.chunkSeconds.value || 5))),
   };
+  return state.settings;
 }
 
 function friendlyError(error, bridgeUrl) {
   if (String(error).includes("Failed to fetch")) {
-    return `Cannot reach local bridge at ${bridgeUrl}. Keep start-local-translator.bat running and retry.`;
+    return `Cannot reach local bridge at ${bridgeUrl}. Reload the extension in chrome://extensions and keep start-local-translator.bat running.`;
   }
   return error;
 }
