@@ -113,7 +113,8 @@ async function testBridge() {
     return;
   }
   refs.statusTitle.textContent = "Bridge OK";
-  refs.statusText.textContent = "Local service is reachable. v1.0.2";
+  refs.statusText.textContent = "Local service is reachable. v1.0.3";
+  await clearStaleError("Bridge is reachable. Click Start translation after the video is playing.", "本地服务已连通。视频播放后点击开始翻译。");
 }
 
 async function start() {
@@ -125,12 +126,27 @@ async function start() {
     refs.statusText.textContent = health.error;
     return;
   }
+  await clearStaleError();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const response = await chrome.runtime.sendMessage({ type: "capture:start", tabId: tab.id, config });
   if (!response?.ok) {
     refs.statusTitle.textContent = t("bridgeFail");
     refs.statusText.textContent = friendlyError(response?.error || "unknown", config.bridgeUrl);
   }
+}
+
+async function clearStaleError(source = "Listening to current tab audio...", target = "正在监听当前标签页音频，等待第一个切片完成。") {
+  const caption = {
+    at: new Date().toLocaleTimeString(),
+    source,
+    target,
+    status: "listening",
+  };
+  state.latest = caption;
+  state.log = [];
+  refs.source.textContent = caption.source;
+  refs.target.textContent = caption.target;
+  await chrome.storage.local.set({ latest: caption, log: [] });
 }
 
 async function checkBridge(bridgeUrl) {

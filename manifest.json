@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tab Audio Translator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Capture current tab audio and stream chunks to a local ASR/translation bridge for live bilingual subtitles.",
   "permissions": ["tabCapture", "activeTab", "storage", "scripting", "offscreen"],
   "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],

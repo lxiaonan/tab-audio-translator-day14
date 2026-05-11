@@ -55,6 +55,12 @@ async function startCapture(tabId, config) {
   };
   await chrome.storage.local.set({ session });
   broadcastSession();
+  await publishCaption(tabId, {
+    at: new Date().toLocaleTimeString(),
+    source: "Listening to current tab audio...",
+    target: "正在监听当前标签页音频，等待第一个切片完成。",
+    status: "listening",
+  });
   await chrome.runtime.sendMessage({
     type: "offscreen:start",
     tabId,
@@ -66,7 +72,7 @@ async function startCapture(tabId, config) {
 
 function friendlyError(error) {
   if (String(error).includes("Failed to fetch")) {
-    return "Cannot reach local bridge. Reload the extension in chrome://extensions, keep start-local-translator.bat running, then start again.";
+    return "Service worker fetch failed. Test Bridge can pass while audio upload fails; reload extension, keep start-local-translator.bat running, then retry with chunk size 2.";
   }
   return error;
 }
@@ -105,8 +111,8 @@ async function uploadChunkFromWorker(tabId, chunk) {
   } catch (error) {
     throw new Error(
       error.name === "AbortError"
-        ? "Local bridge timeout. Try a shorter chunk size or smaller Whisper model."
-        : `Cannot reach local bridge at ${chunk.bridgeUrl}. Keep start-local-translator.bat running.`
+        ? "Service worker upload timed out while calling /translate-chunk. Try chunk size 2 or model tiny."
+        : `Service worker cannot POST audio to ${chunk.bridgeUrl}/translate-chunk: ${error.message || error}.`
     );
   } finally {
     clearTimeout(timeout);
