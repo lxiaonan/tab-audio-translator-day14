@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A Chrome extension blueprint for real current-tab audio capture and local ASR translation bridge." />
+    <title>Tab Audio Translator Day14</title>
+    <link rel="stylesheet" href="./site.css" />
+  </head>
+  <body>
+    <main class="page">
+      <nav class="nav">
+        <strong>Tab Audio Translator</strong>
+        <button id="lang-toggle" type="button">EN</button>
+      </nav>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="eyebrow">Day14 · Chrome 标签页音频实时翻译</p>
+          <h1 data-i18n="title">把任意有声音的标签页，变成可翻译字幕流。</h1>
+          <p data-i18n="lead">扩展负责捕获当前标签页音频和字幕浮层，本地 Python 桥接服务负责 ASR/翻译接口。没有配置真实引擎时，项目会明确提示，不伪造识别结果。</p>
+          <div class="cta-row">
+            <a href="#install" data-i18n="installCta">查看安装步骤</a>
+            <a class="secondary" href="./docs/BEGINNER-GUIDE.md" data-i18n="guideCta">小白文档</a>
+          </div>
+        </div>
+        <div class="device-card" aria-label="Product preview">
+          <div class="browser-bar"><span></span><span></span><span></span><strong>youtube.com / meeting / course</strong></div>
+          <div class="video-stage">
+            <div class="wave"><i></i><i></i><i></i><i></i><i></i></div>
+            <aside>
+              <small>Tab Audio Translator</small>
+              <p>Speaker: The deployment finished after the health check.</p>
+              <h2>部署已在健康检查后完成。</h2>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="truth">
+        <article>
+          <span>01</span>
+          <h2 data-i18n="realCapture">真实标签页音频捕获</h2>
+          <p data-i18n="realCaptureText">使用 Chrome 扩展 `tabCapture` 权限捕获当前活动标签页音频，而不是麦克风伪替代。</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h2 data-i18n="localBridge">本地桥接服务</h2>
+          <p data-i18n="localBridgeText">扩展把 WebM 音频切片发送到 `127.0.0.1:8787`，桥接服务再调用你配置的 ASR/翻译命令。</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h2 data-i18n="honestFallback">诚实降级</h2>
+          <p data-i18n="honestFallbackText">没有真实 ASR 引擎时，只返回“未配置引擎”的状态，避免把假字幕当成功能。</p>
+        </article>
+      </section>
+
+      <section class="workflow" id="install">
+        <div>
+          <p class="eyebrow" data-i18n="installEyebrow">安装与使用</p>
+          <h2 data-i18n="installTitle">四步跑起来</h2>
+        </div>
+        <ol>
+          <li data-i18n="step1">启动本地桥接服务：`python .\\bridge\\server.py`。</li>
+          <li data-i18n="step2">打开 Chrome `chrome://extensions/`，启用开发者模式。</li>
+          <li data-i18n="step3">点击“加载已解压的扩展程序”，选择项目根目录。</li>
+          <li data-i18n="step4">打开有声音的网页，点击扩展图标，设置语言后开始翻译。</li>
+        </ol>
+      </section>
+
+      <section class="grid">
+        <article>
+          <h2 data-i18n="module1">扩展弹窗</h2>
+          <p data-i18n="module1Text">配置桥接地址、源语言、目标语言、切片长度，并查看最新字幕。</p>
+        </article>
+        <article>
+          <h2 data-i18n="module2">字幕浮层</h2>
+          <p data-i18n="module2Text">content script 在当前页面底部显示双语字幕，不改变原网页布局。</p>
+        </article>
+        <article>
+          <h2 data-i18n="module3">会话记录</h2>
+          <p data-i18n="module3Text">保存最近字幕日志，可复制会议、课程、视频的翻译记录。</p>
+        </article>
+      </section>
+    </main>
+    <script src="./site.js"></script>
+  </body>
+</html>

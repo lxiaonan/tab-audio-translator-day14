@@ -1,0 +1,10 @@
+{
+  "viewport": { "width": 1440, "height": 1080 },
+  "initialWaitMs": 700,
+  "steps": [
+    { "click": { "selector": "#lang-toggle" }, "waitMs": 500 },
+    { "click": { "selector": "#lang-toggle" }, "waitMs": 500 },
+    { "hover": { "selector": ".device-card" }, "waitMs": 600 },
+    { "click": { "selector": "a[href='#install']" }, "waitMs": 700 }
+  ]
+}

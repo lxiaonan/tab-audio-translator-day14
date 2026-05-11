@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Audio Translator",
+  "version": "1.0.0",
+  "description": "Capture current tab audio and stream chunks to a local ASR/translation bridge for live bilingual subtitles.",
+  "permissions": ["tabCapture", "activeTab", "storage", "scripting", "offscreen"],
+  "host_permissions": ["http://127.0.0.1:8787/*", "http://localhost:8787/*"],
+  "action": {
+    "default_title": "Tab Audio Translator",
+    "default_popup": "extension/popup.html"
+  },
+  "background": {
+    "service_worker": "extension/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["extension/content-overlay.js"],
+      "css": ["extension/content-overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["extension/content-overlay.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
