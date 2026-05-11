@@ -83,6 +83,14 @@ python .\bridge\server.py
 
 启动完整本地流程：
 
+双击这个文件也可以：
+
+```text
+start-local-translator.bat
+```
+
+或者在 PowerShell 中运行：
+
 ```powershell
 .\tools\start-bridge-full-local.ps1
 ```
@@ -184,6 +192,14 @@ Install the English-to-Chinese offline package:
 ```
 
 Start the full local pipeline:
+
+Double-click this file:
+
+```text
+start-local-translator.bat
+```
+
+Or run in PowerShell:
 
 ```powershell
 .\tools\start-bridge-full-local.ps1
