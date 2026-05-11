@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("TAT_BRIDGE_PORT", "8787"))
 ASR_COMMAND = os.environ.get("TAT_ASR_COMMAND", "").strip()
+ASR_ARGS = os.environ.get("TAT_ASR_ARGS", "").strip()
 TRANSLATE_COMMAND = os.environ.get("TAT_TRANSLATE_COMMAND", "").strip()
 
 
@@ -30,7 +31,7 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "mode": bridge_mode(),
-                    "asr_configured": bool(ASR_COMMAND),
+                    "asr_configured": bool(ASR_COMMAND or ASR_ARGS),
                     "translate_configured": bool(TRANSLATE_COMMAND),
                 }
             )
@@ -62,7 +63,7 @@ class Handler(BaseHTTPRequestHandler):
         self.json_response(
             {
                 "ok": True,
-                "status": "needs-engine" if not ASR_COMMAND else "ok",
+                "status": "needs-engine" if not (ASR_COMMAND or ASR_ARGS) else "ok",
                 "source_text": source_text,
                 "translated_text": translated_text,
                 "source_lang": source_lang,
@@ -91,16 +92,19 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def run_asr(audio_path: Path, source_lang: str) -> str:
-    if not ASR_COMMAND:
+    if not (ASR_COMMAND or ASR_ARGS):
         return (
             "ASR engine is not configured. Set TAT_ASR_COMMAND to a command that accepts "
-            "{audio} and prints recognized text."
+            "{audio} and prints recognized text, or set TAT_ASR_ARGS to a JSON argv array."
         )
-    return run_template_command(ASR_COMMAND, {"audio": str(audio_path), "source_lang": source_lang})
+    values = {"audio": str(audio_path), "source_lang": source_lang}
+    if ASR_ARGS:
+        return run_template_args(ASR_ARGS, values)
+    return run_template_command(ASR_COMMAND, values)
 
 
 def run_translate(source_text: str, source_lang: str, target_lang: str) -> str:
-    if not ASR_COMMAND:
+    if not (ASR_COMMAND or ASR_ARGS):
         return (
             "未配置真实语音识别引擎。请在本地桥接服务中设置 TAT_ASR_COMMAND 后再开始实时翻译。"
         )
@@ -125,6 +129,28 @@ def run_template_command(template: str, values: dict[str, str]) -> str:
         encoding="utf-8",
     )
     return completed.stdout.strip()
+
+
+def run_template_args(template: str, values: dict[str, str]) -> str:
+    raw_args = json.loads(template)
+    if not isinstance(raw_args, list):
+        raise ValueError("TAT_ASR_ARGS must be a JSON array.")
+    args = [replace_tokens(str(part), values) for part in raw_args]
+    completed = subprocess.run(
+        args,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return completed.stdout.strip()
+
+
+def replace_tokens(value: str, values: dict[str, str]) -> str:
+    result = value
+    for key, replacement in values.items():
+        result = result.replace("{" + key + "}", replacement)
+    return result
 
 
 def parse_multipart(content_type: str, body: bytes) -> dict[str, dict[str, bytes | str]]:
@@ -167,9 +193,9 @@ def text_value(form: dict[str, dict[str, bytes | str]], key: str, default: str) 
 
 
 def bridge_mode() -> str:
-    if ASR_COMMAND and TRANSLATE_COMMAND:
+    if (ASR_COMMAND or ASR_ARGS) and TRANSLATE_COMMAND:
         return "asr-and-translate"
-    if ASR_COMMAND:
+    if ASR_COMMAND or ASR_ARGS:
         return "asr-only"
     return "explicit-placeholder"
 

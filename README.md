@@ -51,21 +51,29 @@ python .\bridge\server.py
 11. 如果没有配置 ASR，引擎会显示“未配置”，这是正常状态。
 12. 配置真实 ASR 后，字幕会显示在当前网页底部。
 
-### 接入真实 ASR 示例
+### 已接入的免费本地 ASR 路线：whisper.cpp
 
-桥接服务使用命令钩子，任何能接收音频文件并输出文本的本地工具都可以接入：
+针对没有 NVIDIA CUDA 的 Windows 电脑，本项目推荐 `whisper.cpp`。它已经配套了安装脚本和启动脚本。
 
-```powershell
-$env:TAT_ASR_COMMAND = "python .\my_asr.py --audio {audio} --lang {source_lang}"
-python .\bridge\server.py
-```
-
-可选翻译命令：
+安装 whisper.cpp、`base` 模型和 ffmpeg：
 
 ```powershell
-$env:TAT_TRANSLATE_COMMAND = "python .\my_translate.py --text ""{text}"" --source {source_lang} --target {target_lang}"
-python .\bridge\server.py
+.\tools\setup-whispercpp.ps1 -Model base
 ```
+
+启动带本地 ASR 的 bridge：
+
+```powershell
+.\tools\start-bridge-whispercpp.ps1
+```
+
+验证成功后，`/health` 会显示：
+
+```json
+{"mode":"asr-only","asr_configured":true}
+```
+
+当前默认只做语音转文字。没有配置 `TAT_TRANSLATE_COMMAND` 时，翻译字段会先返回原文；后续可以接入本地翻译模型或 API。
 
 ### 当天参考来源
 
@@ -121,21 +129,29 @@ python .\bridge\server.py
 11. If ASR is not configured, the not-configured message is expected.
 12. After connecting a real ASR command, captions appear at the bottom of the active page.
 
-### Real ASR Hook Example
+### Included Free Local ASR Path: whisper.cpp
 
-Any local tool that accepts an audio file and prints text can be connected:
+For Windows machines without NVIDIA CUDA, this project recommends `whisper.cpp`. Setup and start scripts are included.
 
-```powershell
-$env:TAT_ASR_COMMAND = "python .\my_asr.py --audio {audio} --lang {source_lang}"
-python .\bridge\server.py
-```
-
-Optional translation command:
+Install whisper.cpp, the `base` model, and ffmpeg:
 
 ```powershell
-$env:TAT_TRANSLATE_COMMAND = "python .\my_translate.py --text ""{text}"" --source {source_lang} --target {target_lang}"
-python .\bridge\server.py
+.\tools\setup-whispercpp.ps1 -Model base
 ```
+
+Start the bridge with local ASR:
+
+```powershell
+.\tools\start-bridge-whispercpp.ps1
+```
+
+After success, `/health` returns:
+
+```json
+{"mode":"asr-only","asr_configured":true}
+```
+
+By default this performs speech-to-text only. Without `TAT_TRANSLATE_COMMAND`, the translated field mirrors the source text; a local translation model or API can be connected later.
 
 ### Same-Day Reference Sources
 

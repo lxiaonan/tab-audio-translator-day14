@@ -36,12 +36,23 @@ python .\bridge\server.py
 
 因为这个项目不会内置收费或巨大的语音模型。默认桥接服务只证明链路跑通：扩展能抓音频，服务能接收音频，字幕层能显示结果。
 
-要得到真实字幕，需要配置 ASR：
+### 使用免费的本地 ASR
+
+我已经给项目补了 whisper.cpp 接入脚本。你可以这样安装：
 
 ```powershell
-$env:TAT_ASR_COMMAND = "python .\my_asr.py --audio {audio} --lang {source_lang}"
-python .\bridge\server.py
+.\tools\setup-whispercpp.ps1 -Model base
 ```
+
+之后用这个命令启动：
+
+```powershell
+.\tools\start-bridge-whispercpp.ps1
+```
+
+此时插件收到标签页音频后，会把音频发给本地 whisper.cpp 识别。
+
+注意：当前是“语音转文字”已接通。如果没有配置翻译命令，目标字幕会先显示原文。也就是说英文视频会先出英文字幕，下一步再接本地翻译。
 
 ### 适合的场景
 
@@ -85,12 +96,23 @@ python .\bridge\server.py
 
 The project does not bundle a paid or huge speech model. The default bridge proves the pipeline: extension captures audio, service receives audio, overlay displays responses.
 
-To get real captions, configure an ASR command:
+### Use Free Local ASR
+
+The project now includes a whisper.cpp adapter. Install it with:
 
 ```powershell
-$env:TAT_ASR_COMMAND = "python .\my_asr.py --audio {audio} --lang {source_lang}"
-python .\bridge\server.py
+.\tools\setup-whispercpp.ps1 -Model base
 ```
+
+Then start the bridge with:
+
+```powershell
+.\tools\start-bridge-whispercpp.ps1
+```
+
+The extension will send tab audio chunks to local whisper.cpp for recognition.
+
+Note: speech-to-text is now connected. If no translation command is configured, target captions mirror the source text. For English videos, you will first get English captions; local translation is the next integration step.
 
 ### Good Use Cases
 

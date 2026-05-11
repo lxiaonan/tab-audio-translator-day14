@@ -1,4 +1,6 @@
 docs/demo-frames/
+local-asr/
+docs/asr-test.*
 __pycache__/
 *.pyc
 .DS_Store
