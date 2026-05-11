@@ -17,9 +17,12 @@ Tab Audio Translator is a Chrome extension plus local Python bridge for current-
 - `extension/content-overlay.css`: Isolated caption overlay style.
 - `bridge/server.py`: Local Python HTTP bridge for health checks and audio chunk processing.
 - `bridge/whispercpp_asr.py`: Converts browser WebM chunks to WAV and runs whisper.cpp.
+- `bridge/argos_translate.py`: Runs locally installed Argos Translate language packages.
 - `bridge/README.md`: Bridge setup and engine hook instructions.
 - `tools/setup-whispercpp.ps1`: Downloads whisper.cpp, ffmpeg, and a selected model.
 - `tools/start-bridge-whispercpp.ps1`: Starts the bridge with `TAT_ASR_ARGS` wired to whisper.cpp.
+- `tools/setup-argos-translate.ps1`: Creates the translation venv and installs an Argos language package.
+- `tools/start-bridge-full-local.ps1`: Starts the bridge with both whisper.cpp ASR and Argos translation.
 - `index.html`: GitHub Pages product/guide page.
 - `site.css`: Public page design system.
 - `site.js`: Public page bilingual toggle.
@@ -33,6 +36,7 @@ Tab Audio Translator is a Chrome extension plus local Python bridge for current-
 - Do not fake ASR/translation. If no engine is configured, return a visible not-configured status.
 - Prefer `TAT_ASR_ARGS` JSON argv arrays over shell strings for Windows paths with spaces.
 - Do not commit `local-asr/` or test audio; models and binaries are local machine artifacts.
+- Do not commit `.venv-translate/`; Argos dependencies are local machine artifacts.
 - Keep audio local by default. Do not add cloud upload providers without explicit user configuration and documentation.
 - `tabCapture` may have Chrome version and user-gesture constraints; preserve clear error messages.
 - Keep subtitle overlay bounded, readable, and non-interactive so it does not break host pages.

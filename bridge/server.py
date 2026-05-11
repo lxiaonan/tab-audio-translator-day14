@@ -14,6 +14,7 @@ PORT = int(os.environ.get("TAT_BRIDGE_PORT", "8787"))
 ASR_COMMAND = os.environ.get("TAT_ASR_COMMAND", "").strip()
 ASR_ARGS = os.environ.get("TAT_ASR_ARGS", "").strip()
 TRANSLATE_COMMAND = os.environ.get("TAT_TRANSLATE_COMMAND", "").strip()
+TRANSLATE_ARGS = os.environ.get("TAT_TRANSLATE_ARGS", "").strip()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -32,7 +33,7 @@ class Handler(BaseHTTPRequestHandler):
                     "ok": True,
                     "mode": bridge_mode(),
                     "asr_configured": bool(ASR_COMMAND or ASR_ARGS),
-                    "translate_configured": bool(TRANSLATE_COMMAND),
+                    "translate_configured": bool(TRANSLATE_COMMAND or TRANSLATE_ARGS),
                 }
             )
             return
@@ -108,8 +109,13 @@ def run_translate(source_text: str, source_lang: str, target_lang: str) -> str:
         return (
             "未配置真实语音识别引擎。请在本地桥接服务中设置 TAT_ASR_COMMAND 后再开始实时翻译。"
         )
-    if not TRANSLATE_COMMAND:
+    if not (TRANSLATE_COMMAND or TRANSLATE_ARGS):
         return source_text
+    if TRANSLATE_ARGS:
+        return run_template_args(
+            TRANSLATE_ARGS,
+            {"text": source_text, "source_lang": source_lang, "target_lang": target_lang},
+        )
     return run_template_command(
         TRANSLATE_COMMAND,
         {"text": source_text, "source_lang": source_lang, "target_lang": target_lang},
@@ -193,7 +199,7 @@ def text_value(form: dict[str, dict[str, bytes | str]], key: str, default: str) 
 
 
 def bridge_mode() -> str:
-    if (ASR_COMMAND or ASR_ARGS) and TRANSLATE_COMMAND:
+    if (ASR_COMMAND or ASR_ARGS) and (TRANSLATE_COMMAND or TRANSLATE_ARGS):
         return "asr-and-translate"
     if ASR_COMMAND or ASR_ARGS:
         return "asr-only"

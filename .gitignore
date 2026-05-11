@@ -1,5 +1,6 @@
 docs/demo-frames/
 local-asr/
+.venv-translate/
 docs/asr-test.*
 __pycache__/
 *.pyc

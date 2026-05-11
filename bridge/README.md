@@ -50,3 +50,23 @@ python .\bridge\server.py
 The bridge intentionally uses command hooks so it can work with Whisper, faster-whisper, local API wrappers, or an internal translation service without hard-coding a paid provider.
 
 For safer Windows quoting, `TAT_ASR_ARGS` can be set to a JSON argv array. `tools/start-bridge-whispercpp.ps1` uses this mode.
+
+## Argos Translate Local Translation
+
+Install English-to-Chinese translation:
+
+```powershell
+.\tools\setup-argos-translate.ps1 -From en -To zh
+```
+
+Start the full local bridge:
+
+```powershell
+.\tools\start-bridge-full-local.ps1
+```
+
+Expected health response:
+
+```json
+{"mode":"asr-and-translate","asr_configured":true,"translate_configured":true}
+```

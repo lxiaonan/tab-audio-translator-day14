@@ -73,7 +73,31 @@ python .\bridge\server.py
 {"mode":"asr-only","asr_configured":true}
 ```
 
-当前默认只做语音转文字。没有配置 `TAT_TRANSLATE_COMMAND` 时，翻译字段会先返回原文；后续可以接入本地翻译模型或 API。
+### 已接入的免费本地翻译路线：Argos Translate
+
+安装英文到中文离线翻译包：
+
+```powershell
+.\tools\setup-argos-translate.ps1 -From en -To zh
+```
+
+启动完整本地流程：
+
+```powershell
+.\tools\start-bridge-full-local.ps1
+```
+
+验证成功后，`/health` 会显示：
+
+```json
+{"mode":"asr-and-translate","asr_configured":true,"translate_configured":true}
+```
+
+此时完整链路是：
+
+```text
+Chrome 标签页音频 -> whisper.cpp 本地识别 -> Argos Translate 本地翻译 -> 页面字幕浮层
+```
 
 ### 当天参考来源
 
@@ -151,7 +175,31 @@ After success, `/health` returns:
 {"mode":"asr-only","asr_configured":true}
 ```
 
-By default this performs speech-to-text only. Without `TAT_TRANSLATE_COMMAND`, the translated field mirrors the source text; a local translation model or API can be connected later.
+### Included Free Local Translation Path: Argos Translate
+
+Install the English-to-Chinese offline package:
+
+```powershell
+.\tools\setup-argos-translate.ps1 -From en -To zh
+```
+
+Start the full local pipeline:
+
+```powershell
+.\tools\start-bridge-full-local.ps1
+```
+
+After success, `/health` returns:
+
+```json
+{"mode":"asr-and-translate","asr_configured":true,"translate_configured":true}
+```
+
+The full pipeline is:
+
+```text
+Chrome tab audio -> local whisper.cpp ASR -> local Argos Translate -> page caption overlay
+```
 
 ### Same-Day Reference Sources
 

@@ -52,7 +52,25 @@ python .\bridge\server.py
 
 此时插件收到标签页音频后，会把音频发给本地 whisper.cpp 识别。
 
-注意：当前是“语音转文字”已接通。如果没有配置翻译命令，目标字幕会先显示原文。也就是说英文视频会先出英文字幕，下一步再接本地翻译。
+### 使用免费的本地翻译
+
+安装英文到中文离线翻译包：
+
+```powershell
+.\tools\setup-argos-translate.ps1 -From en -To zh
+```
+
+之后启动完整流程：
+
+```powershell
+.\tools\start-bridge-full-local.ps1
+```
+
+这时就是完整流程：
+
+```text
+标签页音频 -> 本地语音识别 -> 本地翻译 -> 中文字幕
+```
 
 ### 适合的场景
 
@@ -112,7 +130,25 @@ Then start the bridge with:
 
 The extension will send tab audio chunks to local whisper.cpp for recognition.
 
-Note: speech-to-text is now connected. If no translation command is configured, target captions mirror the source text. For English videos, you will first get English captions; local translation is the next integration step.
+### Use Free Local Translation
+
+Install the English-to-Chinese offline package:
+
+```powershell
+.\tools\setup-argos-translate.ps1 -From en -To zh
+```
+
+Then start the full pipeline:
+
+```powershell
+.\tools\start-bridge-full-local.ps1
+```
+
+Now the workflow is complete:
+
+```text
+tab audio -> local speech recognition -> local translation -> Chinese captions
+```
 
 ### Good Use Cases
 
