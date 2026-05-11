@@ -24,7 +24,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     publishCaption(message.tabId, {
       at: new Date().toLocaleTimeString(),
       source: "Capture error",
-      target: message.error,
+      target: friendlyError(message.error),
       status: "error",
     });
     sendResponse({ ok: true });
@@ -55,6 +55,13 @@ async function startCapture(tabId, config) {
     config,
   });
   return { ok: true };
+}
+
+function friendlyError(error) {
+  if (String(error).includes("Failed to fetch")) {
+    return "Cannot reach local bridge. Keep start-local-translator.bat running, then stop and start the extension again.";
+  }
+  return error;
 }
 
 function stopCapture() {

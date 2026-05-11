@@ -65,12 +65,27 @@ async function uploadChunk(blob, config, tabId) {
   form.append("target_lang", config.targetLang);
   form.append("chunk_index", String(chunkIndex));
   chunkIndex += 1;
-  const response = await fetch(`${config.bridgeUrl}/translate-chunk`, {
-    method: "POST",
-    body: form,
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 90000);
+  let response;
+  try {
+    response = await fetch(`${config.bridgeUrl}/translate-chunk`, {
+      method: "POST",
+      body: form,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    throw new Error(
+      error.name === "AbortError"
+        ? "Local bridge timeout. Try a shorter chunk size or smaller Whisper model."
+        : `Cannot reach local bridge at ${config.bridgeUrl}. Keep start-local-translator.bat running.`
+    );
+  } finally {
+    window.clearTimeout(timeout);
+  }
   if (!response.ok) {
-    throw new Error(`Bridge returned HTTP ${response.status}`);
+    const detail = await response.text().catch(() => "");
+    throw new Error(`Bridge returned HTTP ${response.status}. ${detail}`.trim());
   }
   const payload = await response.json();
   chrome.runtime.sendMessage({

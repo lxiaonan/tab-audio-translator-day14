@@ -102,11 +102,29 @@ function bind() {
 async function start() {
   const config = readSettings();
   await chrome.storage.local.set({ settings: config });
+  const health = await checkBridge(config.bridgeUrl);
+  if (!health.ok) {
+    refs.statusTitle.textContent = t("bridgeFail");
+    refs.statusText.textContent = health.error;
+    return;
+  }
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const response = await chrome.runtime.sendMessage({ type: "capture:start", tabId: tab.id, config });
   if (!response?.ok) {
     refs.statusTitle.textContent = t("bridgeFail");
-    refs.statusText.textContent = response?.error || "unknown";
+    refs.statusText.textContent = friendlyError(response?.error || "unknown", config.bridgeUrl);
+  }
+}
+
+async function checkBridge(bridgeUrl) {
+  try {
+    const response = await fetch(`${bridgeUrl}/health`, { cache: "no-store" });
+    if (!response.ok) {
+      return { ok: false, error: `Bridge health check failed: HTTP ${response.status}` };
+    }
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: friendlyError(error.message || String(error), bridgeUrl) };
   }
 }
 
@@ -162,4 +180,11 @@ function readSettings() {
     targetLang: refs.targetLang.value,
     chunkSeconds: Math.max(2, Math.min(15, Number(refs.chunkSeconds.value || 5))),
   };
+}
+
+function friendlyError(error, bridgeUrl) {
+  if (String(error).includes("Failed to fetch")) {
+    return `Cannot reach local bridge at ${bridgeUrl}. Keep start-local-translator.bat running and retry.`;
+  }
+  return error;
 }
