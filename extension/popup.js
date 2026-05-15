@@ -9,6 +9,7 @@ const i18n = {
     targetLang: "目标语言",
     chunkSeconds: "切片秒数",
     testBridge: "测试连接",
+    testPipeline: "测试完整链路",
     start: "开始翻译",
     stop: "停止",
     latestCaption: "最新字幕",
@@ -29,6 +30,7 @@ const i18n = {
     targetLang: "Target language",
     chunkSeconds: "Chunk seconds",
     testBridge: "Test bridge",
+    testPipeline: "Test pipeline",
     start: "Start translation",
     stop: "Stop",
     latestCaption: "Latest caption",
@@ -49,6 +51,7 @@ const state = {
   latest: null,
   log: [],
   settings: defaultSettings(),
+  statusOverride: null,
 };
 
 const refs = {
@@ -58,6 +61,7 @@ const refs = {
   targetLang: document.querySelector("#target-lang"),
   chunkSeconds: document.querySelector("#chunk-seconds"),
   testBridge: document.querySelector("#test-bridge"),
+  testPipeline: document.querySelector("#test-pipeline"),
   start: document.querySelector("#start"),
   stop: document.querySelector("#stop"),
   copyLog: document.querySelector("#copy-log"),
@@ -89,6 +93,7 @@ function bind() {
   });
   refs.start.addEventListener("click", start);
   refs.testBridge.addEventListener("click", testBridge);
+  refs.testPipeline.addEventListener("click", testPipeline);
   refs.stop.addEventListener("click", stop);
   refs.copyLog.addEventListener("click", copyLog);
   chrome.runtime.onMessage.addListener(message => {
@@ -113,8 +118,43 @@ async function testBridge() {
     return;
   }
   refs.statusTitle.textContent = "Bridge OK";
-  refs.statusText.textContent = "Local service is reachable. v1.0.3";
+  refs.statusText.textContent = "Local service is reachable. v1.0.4";
   await clearStaleError("Bridge is reachable. Click Start translation after the video is playing.", "本地服务已连通。视频播放后点击开始翻译。");
+}
+
+async function testPipeline() {
+  const config = readSettings();
+  const health = await checkBridge(config.bridgeUrl);
+  if (!health.ok) {
+    refs.statusTitle.textContent = t("bridgeFail");
+    refs.statusText.textContent = health.error;
+    return;
+  }
+  refs.statusTitle.textContent = "Pipeline testing";
+  refs.statusText.textContent = "Sending bundled test audio through local ASR and translation...";
+  const audio = await fetch(chrome.runtime.getURL("docs/asr-test.webm")).then(response => response.arrayBuffer());
+  const bytes = [...new Uint8Array(audio)];
+  const response = await chrome.runtime.sendMessage({
+    type: "audio:chunk",
+    tabId: null,
+    chunk: {
+      bytes,
+      mimeType: "audio/webm",
+      index: 999,
+      sourceLang: config.sourceLang === "auto" ? "en" : config.sourceLang,
+      targetLang: config.targetLang,
+      bridgeUrl: config.bridgeUrl,
+    },
+  });
+  if (!response?.ok) {
+    state.statusOverride = { title: t("bridgeFail"), text: response?.error || "Pipeline test failed" };
+    render();
+    return;
+  }
+  const saved = await chrome.storage.local.get(["latest"]);
+  state.latest = saved.latest;
+  state.statusOverride = { title: "Pipeline OK", text: "Bundled audio was recognized and translated." };
+  render();
 }
 
 async function start() {
@@ -179,8 +219,8 @@ function render() {
   });
   const running = Boolean(state.session?.running);
   refs.statusCard.classList.toggle("running", running);
-  refs.statusTitle.textContent = running ? t("running") : t("idle");
-  refs.statusText.textContent = running ? t("runningText") : t("idleText");
+  refs.statusTitle.textContent = state.statusOverride?.title || (running ? t("running") : t("idle"));
+  refs.statusText.textContent = state.statusOverride?.text || (running ? t("runningText") : t("idleText"));
   refs.source.textContent = state.latest?.source || "-";
   refs.target.textContent = state.latest?.target || "-";
 }

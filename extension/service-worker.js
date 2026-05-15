@@ -21,19 +21,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "audio:chunk") {
-    uploadChunkFromWorker(message.tabId, message.chunk)
+    const sourceTabId = message.tabId || sender.tab?.id || null;
+    uploadChunkFromWorker(sourceTabId, message.chunk)
       .then(() => sendResponse({ ok: true }))
       .catch(error => sendResponse({ ok: false, error: friendlyError(error.message) }));
     return true;
   }
 
   if (message.type === "capture:error") {
-    publishCaption(message.tabId, {
-      at: new Date().toLocaleTimeString(),
-      source: "Capture error",
-      target: friendlyError(message.error),
-      status: "error",
-    });
+    publishError(message.tabId || sender.tab?.id || null, friendlyError(message.error));
     sendResponse({ ok: true });
     return false;
   }
@@ -44,6 +40,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function startCapture(tabId, config) {
   await probeBridge(config.bridgeUrl);
   stopCapture();
+  const pageRecorder = await tryStartPageRecorder(tabId, config);
+  if (pageRecorder.ok) {
+    session = {
+      running: true,
+      tabId,
+      startedAt: new Date().toISOString(),
+      config,
+      mode: "page-recorder",
+    };
+    await chrome.storage.local.set({ session });
+    broadcastSession();
+    await publishCaption(tabId, {
+      at: new Date().toLocaleTimeString(),
+      source: "Listening to page media element...",
+      target: "正在监听当前网页播放器音频，等待第一个切片完成。",
+      status: "listening",
+    });
+    return { ok: true, mode: "page-recorder" };
+  }
   await ensureOffscreenDocument();
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
 
@@ -70,14 +85,33 @@ async function startCapture(tabId, config) {
   return { ok: true };
 }
 
+async function tryStartPageRecorder(tabId, config) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["extension/page-recorder.js"],
+    });
+  } catch {
+    // The content script may already be present or injection may be blocked; sendMessage below is authoritative.
+  }
+  try {
+    return await chrome.tabs.sendMessage(tabId, { type: "page-recorder:start", config });
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
 function friendlyError(error) {
   if (String(error).includes("Failed to fetch")) {
-    return "Service worker fetch failed. Test Bridge can pass while audio upload fails; reload extension, keep start-local-translator.bat running, then retry with chunk size 2.";
+    return "Audio chunk upload failed. If captions are still updating, this was likely a short/silent chunk and can be ignored.";
   }
   return error;
 }
 
 function stopCapture() {
+  if (session.tabId) {
+    chrome.tabs.sendMessage(session.tabId, { type: "page-recorder:stop" }).catch(() => {});
+  }
   chrome.runtime.sendMessage({ type: "offscreen:stop" }).catch(() => {});
   session = { running: false, stoppedAt: new Date().toISOString() };
   chrome.storage.local.set({ session });
@@ -136,7 +170,32 @@ async function publishCaption(tabId, caption) {
   const log = [...(current.log || []), caption].slice(-80);
   await chrome.storage.local.set({ latest: caption, log });
   chrome.runtime.sendMessage({ type: "caption:update", caption }).catch(() => {});
-  chrome.tabs.sendMessage(tabId, { type: "caption:update", caption }).catch(() => {});
+  if (tabId) {
+    chrome.tabs.sendMessage(tabId, { type: "caption:update", caption }).catch(() => {});
+  }
+}
+
+async function publishError(tabId, error) {
+  const current = await chrome.storage.local.get(["latest", "log"]);
+  const errorCaption = {
+    at: new Date().toLocaleTimeString(),
+    source: "Capture warning",
+    target: error,
+    status: "error",
+  };
+  const hasGoodCaption = current.latest && current.latest.status === "ok";
+  const log = [...(current.log || []), errorCaption].slice(-80);
+  await chrome.storage.local.set({
+    latest: hasGoodCaption ? current.latest : errorCaption,
+    lastError: errorCaption,
+    log,
+  });
+  if (!hasGoodCaption) {
+    chrome.runtime.sendMessage({ type: "caption:update", caption: errorCaption }).catch(() => {});
+    if (tabId) {
+      chrome.tabs.sendMessage(tabId, { type: "caption:update", caption: errorCaption }).catch(() => {});
+    }
+  }
 }
 
 function broadcastSession() {

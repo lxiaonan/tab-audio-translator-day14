@@ -1,7 +1,16 @@
 docs/demo-frames/
 local-asr/
 .venv-translate/
-docs/asr-test.*
+docs/asr-test.wav
+.pw-profile/
+.pw-profile2/
+.pw-profile3/
+.pw-profile4/
+.pw-profile5/
+.pw-profile6/
+.pw-profile7/
+.pw-profile8/
+.pw-profile9/
 __pycache__/
 *.pyc
 .DS_Store

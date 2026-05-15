@@ -39,7 +39,7 @@ async function start({ tabId, streamId, config }) {
     audioBitsPerSecond: 64000,
   });
   recorder.ondataavailable = event => {
-    if (event.data?.size) {
+    if (event.data?.size > 4096) {
       forwardChunk(event.data, config, tabId).catch(error => {
         chrome.runtime.sendMessage({ type: "capture:error", tabId, error: error.message });
       });

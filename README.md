@@ -107,6 +107,14 @@ start-local-translator.bat
 Chrome 标签页音频 -> whisper.cpp 本地识别 -> Argos Translate 本地翻译 -> 页面字幕浮层
 ```
 
+### 当前可用捕获模式
+
+插件会优先使用 **page-recorder 模式**：直接从当前网页正在播放的 `<video>` / `<audio>` 元素调用 `captureStream()` 取音频。这条路径已经用本地测试页端到端验证通过。
+
+如果页面播放器不支持 `captureStream()`，插件会再尝试 Chrome `tabCapture` 回退路径。
+
+建议使用时先播放视频，再点击“开始翻译”。如果你只是想确认本地模型链路，点“测试完整链路”，它会用内置英文测试音频直接跑 ASR + 翻译。
+
 ### 当天参考来源
 
 - Chrome tabCapture API: https://developer.chrome.com/docs/extensions/reference/api/tabCapture
@@ -216,6 +224,14 @@ The full pipeline is:
 ```text
 Chrome tab audio -> local whisper.cpp ASR -> local Argos Translate -> page caption overlay
 ```
+
+### Current Capture Mode
+
+The extension prefers **page-recorder mode**: it captures audio directly from the current page's playing `<video>` / `<audio>` element through `captureStream()`. This path has been verified end-to-end with a local test page.
+
+If a player does not support `captureStream()`, the extension attempts the Chrome `tabCapture` fallback path.
+
+Start video playback before clicking “Start translation”. To verify the local model pipeline only, click “Test pipeline”; it sends the bundled English test clip through ASR + translation.
 
 ### Same-Day Reference Sources
 
