@@ -14,3 +14,7 @@ docs/asr-test.wav
 __pycache__/
 *.pyc
 .DS_Store
+*.local.json
+*.local.ps1
+.env.local
+local-secrets/

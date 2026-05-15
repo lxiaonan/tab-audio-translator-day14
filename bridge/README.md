@@ -70,3 +70,40 @@ Expected health response:
 ```json
 {"mode":"asr-and-translate","asr_configured":true,"translate_configured":true}
 ```
+
+## Online Translation Backends
+
+Use these when local Argos translation quality is not good enough. The ASR still runs locally with whisper.cpp; only recognized text is sent out for translation.
+
+### Google Public Translate Endpoint
+
+No key is required:
+
+```powershell
+.\tools\start-bridge-online-translate.ps1 -Provider Google
+```
+
+Or double-click:
+
+```text
+start-online-google-translator.bat
+```
+
+### DeepLX-Compatible Endpoint
+
+Set the endpoint only on your local machine. Do not commit it:
+
+```powershell
+$env:TAT_DEEPLX_URL = "your full DeepLX /translate endpoint"
+.\tools\start-bridge-online-translate.ps1 -Provider DeepLX
+```
+
+The adapter expects a JSON response with a `data` string, and also accepts common fallback fields such as `translation`, `translated_text`, or `text`.
+
+### Verified Pipeline
+
+The online mode was verified with the bundled `docs/asr-test.webm` file:
+
+```text
+WebM audio chunk -> whisper.cpp -> recognized English text -> DeepLX / Google -> Chinese caption text
+```

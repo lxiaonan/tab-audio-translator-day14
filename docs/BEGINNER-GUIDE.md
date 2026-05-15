@@ -80,6 +80,34 @@ start-local-translator.bat
 标签页音频 -> 本地语音识别 -> 本地翻译 -> 中文字幕
 ```
 
+### 想要翻译质量更好怎么办
+
+本地 Argos 的优点是免费、离线、隐私好，缺点是中文会比较生硬。现在项目多了两个在线翻译模式：
+
+- Google：不需要密钥，双击 `start-online-google-translator.bat` 就能试。
+- DeepLX：翻译更自然，但需要你自己提供接口地址。
+
+Google 模式：
+
+```powershell
+.\tools\start-bridge-online-translate.ps1 -Provider Google
+```
+
+DeepLX 模式：
+
+```powershell
+$env:TAT_DEEPLX_URL = "你的 DeepLX /translate 完整地址"
+.\tools\start-bridge-online-translate.ps1 -Provider DeepLX
+```
+
+注意：在线翻译模式下，音频不会直接上传，但本地识别出来的文字会发送到对应翻译接口。如果视频内容很隐私，请用 `start-local-translator.bat` 的纯本地模式。
+
+### 我应该选哪个启动方式
+
+- 只想先跑起来：双击 `start-online-google-translator.bat`。
+- 最在意隐私：双击 `start-local-translator.bat`。
+- 最在意翻译质量：用 DeepLX 模式，并把接口地址放到本机环境变量里。
+
 ### 适合的场景
 
 - 看英文教程，希望生成中文字幕。
@@ -165,6 +193,34 @@ Now the workflow is complete:
 ```text
 tab audio -> local speech recognition -> local translation -> Chinese captions
 ```
+
+### How To Get Better Translation Quality
+
+Local Argos is free, offline, and private, but its Chinese output can sound stiff. The project now includes two online translation modes:
+
+- Google: no key required, double-click `start-online-google-translator.bat` to try it.
+- DeepLX: usually more natural, but requires your own endpoint URL.
+
+Google mode:
+
+```powershell
+.\tools\start-bridge-online-translate.ps1 -Provider Google
+```
+
+DeepLX mode:
+
+```powershell
+$env:TAT_DEEPLX_URL = "your full DeepLX /translate endpoint"
+.\tools\start-bridge-online-translate.ps1 -Provider DeepLX
+```
+
+Privacy note: online translation mode does not upload the raw audio, but it does send locally recognized text to the selected translation endpoint. Use `start-local-translator.bat` when the content is private.
+
+### Which Start Mode Should I Use
+
+- Fastest trial: double-click `start-online-google-translator.bat`.
+- Best privacy: double-click `start-local-translator.bat`.
+- Best translation quality: use DeepLX mode with a local environment variable.
 
 ### Good Use Cases
 

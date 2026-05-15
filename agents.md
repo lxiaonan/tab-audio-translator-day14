@@ -18,11 +18,14 @@ Tab Audio Translator is a Chrome extension plus local Python bridge for current-
 - `bridge/server.py`: Local Python HTTP bridge for health checks and audio chunk processing.
 - `bridge/whispercpp_asr.py`: Converts browser WebM chunks to WAV and runs whisper.cpp.
 - `bridge/argos_translate.py`: Runs locally installed Argos Translate language packages.
+- `bridge/deeplx_translate.py`: Calls a DeepLX-compatible online translation endpoint.
+- `bridge/google_translate.py`: Calls Google's public translate endpoint as a no-key fallback.
 - `bridge/README.md`: Bridge setup and engine hook instructions.
 - `tools/setup-whispercpp.ps1`: Downloads whisper.cpp, ffmpeg, and a selected model.
 - `tools/start-bridge-whispercpp.ps1`: Starts the bridge with `TAT_ASR_ARGS` wired to whisper.cpp.
 - `tools/setup-argos-translate.ps1`: Creates the translation venv and installs an Argos language package.
 - `tools/start-bridge-full-local.ps1`: Starts the bridge with both whisper.cpp ASR and Argos translation.
+- `tools/start-bridge-online-translate.ps1`: Starts whisper.cpp ASR with either Google or DeepLX online translation.
 - `index.html`: GitHub Pages product/guide page.
 - `site.css`: Public page design system.
 - `site.js`: Public page bilingual toggle.
@@ -37,7 +40,8 @@ Tab Audio Translator is a Chrome extension plus local Python bridge for current-
 - Prefer `TAT_ASR_ARGS` JSON argv arrays over shell strings for Windows paths with spaces.
 - Do not commit `local-asr/` or test audio; models and binaries are local machine artifacts.
 - Do not commit `.venv-translate/`; Argos dependencies are local machine artifacts.
-- Keep audio local by default. Do not add cloud upload providers without explicit user configuration and documentation.
+- Keep audio local by default. Online translation may send recognized text out, but only through explicit user-selected scripts and documented environment variables.
+- Never commit DeepLX URLs, tokens, cookies, or API keys. Use `TAT_DEEPLX_URL` or ignored local files only.
 - `tabCapture` may have Chrome version and user-gesture constraints; preserve clear error messages.
 - Keep subtitle overlay bounded, readable, and non-interactive so it does not break host pages.
 - Long logs and long translated text must wrap safely.

@@ -19,6 +19,7 @@ Tab Audio Translator 是一个 Chrome 插件项目，用来捕获“当前标签
 - `MediaRecorder` 音频切片，默认 WebM/Opus。
 - 本地 Python 桥接服务：`/health` 和 `/translate-chunk`。
 - 桥接服务支持 `TAT_ASR_COMMAND` 和 `TAT_TRANSLATE_COMMAND` 接入真实本地 ASR / 翻译命令。
+- 可选 DeepLX 兼容接口和 Google 免费翻译接口，用来替代质量较弱的本地 Argos 翻译。
 - 页面字幕浮层 content script。
 - 扩展弹窗控制台：桥接地址、源语言、目标语言、切片秒数、开始/停止、会话记录复制。
 - GitHub Pages 展示页和双语切换。
@@ -107,6 +108,41 @@ start-local-translator.bat
 Chrome 标签页音频 -> whisper.cpp 本地识别 -> Argos Translate 本地翻译 -> 页面字幕浮层
 ```
 
+### 更高质量的在线翻译：DeepLX / Google
+
+如果你觉得 Argos 本地翻译质量不够，可以改用在线翻译。语音识别仍然在本机 `whisper.cpp` 跑，只有识别出来的文字会发给在线翻译接口。
+
+不需要密钥、最快试用的 Google 模式：
+
+```powershell
+.\tools\start-bridge-online-translate.ps1 -Provider Google
+```
+
+也可以直接双击：
+
+```text
+start-online-google-translator.bat
+```
+
+DeepLX 模式需要你自己在本机设置接口地址，不要把密钥写进仓库：
+
+```powershell
+$env:TAT_DEEPLX_URL = "你的 DeepLX /translate 完整地址"
+.\tools\start-bridge-online-translate.ps1 -Provider DeepLX
+```
+
+本次已经用内置英文测试音频验证过完整链路：
+
+```text
+测试音频 -> whisper.cpp 识别英文 -> DeepLX / Google 翻译中文 -> bridge 返回字幕 JSON
+```
+
+选择建议：
+
+- 隐私最优：`start-local-translator.bat`，全部本地，翻译质量一般。
+- 质量更好：DeepLX 在线模式，翻译更自然，但会把识别文本发到你的 DeepLX 接口。
+- 快速免费试用：Google 在线模式，不需要 key，但接口稳定性不保证。
+
 ### 当前可用捕获模式
 
 插件会优先使用 **page-recorder 模式**：直接从当前网页正在播放的 `<video>` / `<audio>` 元素调用 `captureStream()` 取音频。这条路径已经用本地测试页端到端验证通过。
@@ -121,6 +157,8 @@ Chrome 标签页音频 -> whisper.cpp 本地识别 -> Argos Translate 本地翻�
 - Chrome Extension audio capture / offscreen documents: https://developer.chrome.com/docs/extensions/how-to/web-platform/screen-capture
 - Chrome Extensions Manifest V3 documentation: https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3
 - Web Speech API boundary reference: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
+- DeepLX-compatible translation endpoint test
+- Google public translate endpoint test
 
 ## English
 
@@ -137,6 +175,7 @@ It is not a normal web page tool. Normal web pages cannot read audio from arbitr
 - Audio chunking through `MediaRecorder`, using WebM/Opus when available.
 - Local Python bridge with `/health` and `/translate-chunk`.
 - Bridge hooks for real local ASR and translation commands via `TAT_ASR_COMMAND` and `TAT_TRANSLATE_COMMAND`.
+- Optional DeepLX-compatible and Google public translation backends for better translation quality than local Argos.
 - Page caption overlay content script.
 - Extension popup console with bridge URL, source language, target language, chunk length, start/stop, and log copy.
 - GitHub Pages product page with Chinese / English toggle.
@@ -225,6 +264,41 @@ The full pipeline is:
 Chrome tab audio -> local whisper.cpp ASR -> local Argos Translate -> page caption overlay
 ```
 
+### Higher-Quality Online Translation: DeepLX / Google
+
+If Argos local translation is not good enough, use an online translation backend. Speech recognition still runs locally through `whisper.cpp`; only recognized text is sent to the selected translation endpoint.
+
+Google mode needs no key and is the fastest option to try:
+
+```powershell
+.\tools\start-bridge-online-translate.ps1 -Provider Google
+```
+
+You can also double-click:
+
+```text
+start-online-google-translator.bat
+```
+
+DeepLX mode requires a local environment variable. Do not commit secrets to the repository:
+
+```powershell
+$env:TAT_DEEPLX_URL = "your full DeepLX /translate endpoint"
+.\tools\start-bridge-online-translate.ps1 -Provider DeepLX
+```
+
+This path has been verified with the bundled English test audio:
+
+```text
+test audio -> whisper.cpp English ASR -> DeepLX / Google Chinese translation -> bridge caption JSON
+```
+
+Recommendation:
+
+- Best privacy: `start-local-translator.bat`, fully local, but translation quality is modest.
+- Better quality: DeepLX online mode, more natural translation, but recognized text is sent to your DeepLX endpoint.
+- Fast free trial: Google online mode, no key needed, but endpoint stability is not guaranteed.
+
 ### Current Capture Mode
 
 The extension prefers **page-recorder mode**: it captures audio directly from the current page's playing `<video>` / `<audio>` element through `captureStream()`. This path has been verified end-to-end with a local test page.
@@ -239,3 +313,5 @@ Start video playback before clicking “Start translation”. To verify the loca
 - Chrome Extension audio capture / offscreen documents: https://developer.chrome.com/docs/extensions/how-to/web-platform/screen-capture
 - Chrome Extensions Manifest V3 documentation: https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3
 - Web Speech API boundary reference: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
+- DeepLX-compatible translation endpoint test
+- Google public translate endpoint test

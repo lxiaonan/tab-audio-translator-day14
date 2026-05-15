@@ -207,6 +207,7 @@ h1 {
 
 .truth,
 .grid,
+.modes,
 .workflow {
   margin-top: 24px;
 }
@@ -220,7 +221,8 @@ h1 {
 
 .truth article,
 .grid article,
-.workflow {
+.workflow,
+.modes {
   min-width: 0;
   padding: 24px;
   border: 1px solid var(--color-border);
@@ -260,6 +262,41 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.modes {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.modes h2 {
+  margin-bottom: 0;
+  font-size: 32px;
+}
+
+.mode-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mode-list article {
+  min-width: 0;
+  padding: 18px;
+  border-radius: 18px;
+  background: #f8fbff;
+}
+
+.mode-list strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.mode-list p {
+  margin-bottom: 0;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
 @keyframes wave {
   50% { transform: scaleY(0.62); opacity: 0.72; }
 }
@@ -268,6 +305,8 @@ h1 {
   .hero,
   .truth,
   .grid,
+  .modes,
+  .mode-list,
   .workflow {
     grid-template-columns: 1fr;
   }
